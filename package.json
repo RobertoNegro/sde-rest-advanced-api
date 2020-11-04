@@ -1,0 +1,34 @@
+{
+  "name": "sde-rest-advanced-api",
+  "version": "1.0.0",
+  "description": "REST Advanced Lab | Service Design Engineering | UniTN | 2020-21 | Roberto Negro, Giulia Peserico, Edoardo Schioccola, Dinah Wobuyaga",
+  "main": "index.js",
+  "scripts": {
+    "start": "tsc && node index.js",
+    "watch": "tsc-watch --onSuccess \"node index.js\""
+  },
+  "author": "Roberto Negro, Giulia Peserico, Edoardo Schioccola, Dinah Wobuyaga",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "compression": "^1.7.4",
+    "cors": "^2.8.5",
+    "errorhandler": "^1.5.1",
+    "express": "^4.17.1",
+    "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "@types/compression": "^1.7.0",
+    "@types/cors": "^2.8.8",
+    "@types/errorhandler": "^1.5.0",
+    "@types/express": "^4.17.8",
+    "@types/morgan": "^1.9.2",
+    "eslint": "^7.2.0",
+    "eslint-config-airbnb": "^18.2.0",
+    "eslint-config-airbnb-base": "^14.2.0",
+    "eslint-plugin-import": "^2.22.1",
+    "prettier": "^2.1.2",
+    "tsc-watch": "^4.2.9",
+    "typescript": "^4.0.5"
+  }
+}
