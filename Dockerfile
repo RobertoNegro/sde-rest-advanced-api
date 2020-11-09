@@ -1,8 +1,9 @@
 FROM node:12-slim
 WORKDIR /www
 ENV NODE_ENV development
-COPY package.json /www/package.json
-RUN npm install --production
-COPY . /www
+COPY package.json .
+COPY package-lock.json .
+RUN npm install
+COPY . .
 CMD ["npm", "start"]
-EXPOSE 8080
+EXPOSE 80

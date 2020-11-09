@@ -1,4 +1,4 @@
 export default {
-  PORT: 8081,
+  PORT: 80,
   HOST: '0.0.0.0'
 }
