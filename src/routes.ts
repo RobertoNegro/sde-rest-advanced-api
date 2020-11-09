@@ -10,7 +10,16 @@
  */
 
 import express from 'express';
-import { index } from './controller';
+import {
+  casesByRegionId,
+  generateDatabase,
+  index,
+  lineChart, map,
+  pieChart,
+  ranking,
+  regionById,
+  regions
+} from './controller';
 
 const router = express.Router();
 
@@ -20,5 +29,16 @@ const router = express.Router();
 // router.get('/:parameter1/:parameter2', f);
 
 router.get('/', index);
+router.get('/regions', regions);
+router.get('/region/:id', regionById);
+router.get('/region/:id/cases/:year?/:month?/:day?', casesByRegionId);
+
+router.get('/ranking', ranking);
+router.get('/charts/pie', pieChart);
+router.get('/charts/line', lineChart);
+router.get('/map', map);
+
+router.get('/generate', generateDatabase);
+
 
 export default router;

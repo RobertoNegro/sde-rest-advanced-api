@@ -3,11 +3,24 @@
  *   TypeScript interfaces and types should be defined here!
  */
 
+export interface Error {
+  error: any;
+}
+
+export const isError = (arg: any): arg is Error => {
+  return arg && arg.error;
+};
+
 export interface Region {
   id: number;
   name: string;
   lat: number;
   long: number;
+}
+
+export interface CasesPerRegion {
+  region: Region;
+  cases: number;
 }
 
 export interface Entry {
@@ -26,6 +39,10 @@ export interface Entry {
   tampons: number;
   cases_tested: number;
 }
+
+export const isEntry = (arg: any): arg is Entry => {
+  return arg && arg.tampons;
+};
 
 export interface Cases {
   [id: number]: {

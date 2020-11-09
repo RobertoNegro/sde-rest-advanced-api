@@ -11,17 +11,11 @@ Clone the repository, and install all the dependencies by executing the command:
 npm install
 ```
 
+Rename the file `secrets.example.ts` in `secrets.ts` and open it with your favourite editor: you have to fill in the required api keys as already defined in the file.
+
 Run the service executing the command:
 
 ```bash
 npm run start
 ```
-
-With the previous command, if you make changes to the files, those changes are not effective until you stop and 
-restart the service. If you want to enable auto-updates (no more need to restart the server, the server will automatically
-restart when the files are changed), instead of the previous command run the service executing the command:
-
-```bash
-npm run watch
-```
-
+The server will automatically restart when the files are changed.
