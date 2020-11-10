@@ -1,14 +1,29 @@
-import { Cases, CasesPerRegion, Entry, Error, isEntry, isError, Region } from './types';
+/*********
+ * Core functionalities
+ *   All the processing logics are defined here. In this way, we leave in the
+ *   controller all the input/output filtering and selection, and here we write
+ *   the "raw" logics. In this way they're also re-usable! :)
+ *   Obviously, in a real project, those functionalities should be divided as well.
+ *   "Core" is not a fixed word for this type of file, sometimes
+ *   people put those functions in a Utils file, sometimes in a Helper
+ *   file, sometimes in a Services folder with different files for every service..
+ *   It really depends on your project, style and personal preference :)
+ */
+
+
+import { CasesPerRegion, Entry, Error, isError, Region } from './types';
 import config from '../config';
 import qs from 'qs';
 
 import axios from 'axios';
-import secrets from "../secrets";
+import secrets from '../secrets';
 axios.defaults.paramsSerializer = (params) => {
   return qs.stringify(params, { indices: false });
-}
+};
 
-//region --- REGIONS ---
+//region --- REGIONS and CASES ---
+
+// Example
 export const getRegions: () => Promise<Region[] | Error> = async () => {
   try {
     const regions = await axios.get<Region[]>(`${config.URL_API_DATA}/regions`);
@@ -21,6 +36,7 @@ export const getRegions: () => Promise<Region[] | Error> = async () => {
   }
 };
 
+// Example
 export const getRegionById: (id: number) => Promise<Region | Error> = async (id) => {
   try {
     const region = await axios.get<Region>(`${config.URL_API_DATA}/region/${id}`);
@@ -32,22 +48,18 @@ export const getRegionById: (id: number) => Promise<Region | Error> = async (id)
     };
   }
 };
-//endregion
 
-//region --- CASES ---
+// Exercise
 export const getCasesByRegionId: (
   id: number,
-  year?: number,
-  month?: number,
-  day?: number
-) => Promise<Cases | Entry | Error> = async (id, year, month, day) => {
-  let url = `${config.URL_API_DATA}/region/${id}/cases`;
-  if (year) url += `/${year}`;
-  if (month) url += `/${month}`;
-  if (day) url += `/${day}`;
-
+  year: number,
+  month: number,
+  day: number
+) => Promise<Entry | Error> = async (id, year, month, day) => {
   try {
-    const region = await axios.get<Entry | Cases>(url);
+    const region = await axios.get<Entry>(
+      `${config.URL_API_DATA}/region/${id}/cases/${year}/${month}/${day}`
+    );
     return region.data;
   } catch (e) {
     console.error(e);
@@ -56,21 +68,20 @@ export const getCasesByRegionId: (
     };
   }
 };
+
 //endregion
 
-//region --- LOCAL ELABORATIONS
-export const getRanking: (
-  n: number,
-  ordering: 'asc' | 'desc'
-) => Promise<CasesPerRegion[]> = async (n, ordering) => {
+//region --- LOCAL ELABORATIONS ---
+
+// Example, first variant, without any parameter
+export const getRanking_1: () => Promise<CasesPerRegion[]> = async () => {
   const regions = await getRegions();
 
   let ranks: CasesPerRegion[] = [];
   if (!isError(regions)) {
     for (let i = 0; i < regions.length; i++) {
-      const id = regions[i].id;
-      const cases = await getCasesByRegionId(id, 2020, 11, 6);
-      if (isEntry(cases)) {
+      const cases = await getCasesByRegionId(regions[i].id, 2020, 11, 6);
+      if (!isError(cases)) {
         ranks.push({
           region: regions[i],
           cases: cases.total_positive,
@@ -80,44 +91,108 @@ export const getRanking: (
   }
 
   ranks = ranks.sort((a: CasesPerRegion, b: CasesPerRegion) => a.cases - b.cases);
+  return ranks.slice(0, 5);
+};
+
+// Example, second variant, with n as parameter
+export const getRanking_2: (n: number) => Promise<CasesPerRegion[]> = async (n) => {
+  const regions = await getRegions();
+
+  let ranks: CasesPerRegion[] = [];
+  if (!isError(regions)) {
+    for (let i = 0; i < regions.length; i++) {
+      const cases = await getCasesByRegionId(regions[i].id, 2020, 11, 6);
+      if (!isError(cases)) {
+        ranks.push({
+          region: regions[i],
+          cases: cases.total_positive,
+        });
+      }
+    }
+  }
+
+  ranks = ranks.sort((a: CasesPerRegion, b: CasesPerRegion) => a.cases - b.cases);
+  return ranks.slice(0, n);
+};
+
+// Exercise: ordering
+export const getRanking: (
+  n: number,
+  ordering: 'asc' | 'desc'
+) => Promise<CasesPerRegion[]> = async (n, ordering) => {
+  const regions = await getRegions();
+
+  let ranks: CasesPerRegion[] = [];
+  if (!isError(regions)) {
+    for (let i = 0; i < regions.length; i++) {
+      const cases = await getCasesByRegionId(regions[i].id, 2020, 11, 6);
+      if (!isError(cases)) {
+        ranks.push({
+          region: regions[i],
+          cases: cases.total_positive,
+        });
+      }
+    }
+  }
+
+  ranks = ranks.sort((a: CasesPerRegion, b: CasesPerRegion) => a.cases - b.cases);
+
   if (ordering === 'asc') return ranks.slice(0, n);
   else return ranks.reverse().slice(0, n);
 };
+
 //endregion
 
 //region --- CHARTS ---
+
+// Example
 export const getPieChart: () => Promise<File | Error> = async () => {
   const regions = await getRegions();
 
-  let regionsNames: string[] = [];
-  let regionsCases: number[] = [];
-
   if (!isError(regions)) {
-    let totalCases = 0;
-    for (let i = 0; i < regions.length; i++) {
-      regionsNames.push(regions[i].name);
+    const casesPerRegions: CasesPerRegion[] = [];
 
+    let totalCases = 0;
+
+    // For each region, take the total number of positives
+    for (let i = 0; i < regions.length; i++) {
       const cases = await getCasesByRegionId(regions[i].id, 2020, 11, 6);
-      if (isEntry(cases)) {
-        regionsCases.push(cases.total_positive);
+      if (!isError(cases)) {
+        casesPerRegions.push({
+          region: regions[i],
+          cases: cases.total_positive,
+        });
         totalCases += cases.total_positive;
       }
     }
 
+    // Create the parameters for the query (with normalization of the cases such that the total sum is 100)
+    let labels = '';
+    let data = '';
+    for (let i = 0; i < casesPerRegions.length; i++) {
+      labels += casesPerRegions[i].region.name;
+      data += Math.trunc((casesPerRegions[i].cases / totalCases) * 100);
+
+      if(i < casesPerRegions.length - 1) {
+        labels += '|';
+        data += ',';
+      }
+    }
+
+    // Let's make the request to google chart API to create the chart
     try {
       const response = await axios.get<File>('https://chart.googleapis.com/chart', {
-        responseType: 'arraybuffer',
+        responseType: 'arraybuffer', // Needed because the response is not a json but a binary file!
         params: {
           cht: 'p3',
           chs: `600x250`,
           chtt: 'Covid Infections',
-          chd: `t:${regionsCases
-            .map((regionCases) => Math.trunc((regionCases / totalCases) * 100))
-            .join(',')}`,
-          chl: `${regionsNames.join('|')}`,
+          chl: `${labels}`,
+          chd: `t:${data}`,
           chco: 'ef476f,ffd166,06d6a0,118ab2,073b4c',
         },
       });
+
       return response.data;
     } catch (e) {
       console.error(e);
@@ -126,40 +201,50 @@ export const getPieChart: () => Promise<File | Error> = async () => {
       };
     }
   } else {
-    return regions;
+    return regions; // It's an error! :( We return it as is.
   }
 };
 
+// Exercise
 export const getLineChart: () => Promise<File | Error> = async () => {
   const region = await getRegionById(22);
-  let casesPerDay: number[] = [];
-  let dayLabels: string[] = [];
 
   if (!isError(region)) {
+    let labels = '';
+    let data = '';
+
+    // For each day, take the total number of positives and create the parameters for the query
     for (let i = 0; i < 30; i++) {
       const cases = await getCasesByRegionId(region.id, 2020, 11, i);
-      if (isEntry(cases)) {
-        casesPerDay.push(cases.total_positive);
-        dayLabels.push(`${i}`);
+      if (!isError(cases)) {
+        labels += i;
+        data += cases.total_positive;
+
+        if(i < 30 - 1) {
+          labels += '|';
+          data += ',';
+        }
       }
     }
 
+    // Let's make the request to google chart API to create the chart
     try {
       const response = await axios.get<File>('https://chart.googleapis.com/chart', {
-        responseType: 'arraybuffer',
+        responseType: 'arraybuffer', // Needed because the response is not a json but a binary file!
         params: {
           cht: 'lc',
           chs: `600x250`,
           chtt: 'Covid Infections',
           chds: '0,10000',
-          chd: `t:${casesPerDay.join(',')}`,
+          chd: `t:${data}`,
           chdl: `${region.name}`,
           chco: '118ab2',
-          chl: `${dayLabels.join('|')}`,
+          chl: `${labels}`,
           chxt: 'x,y',
           chxr: '1,0,10000',
         },
       });
+
       return response.data;
     } catch (e) {
       console.error(e);
@@ -168,59 +253,65 @@ export const getLineChart: () => Promise<File | Error> = async () => {
       };
     }
   } else {
-    return region;
+    return region; // It's an error! :( We return it as is.
   }
 };
+
 //endregion
 
 //region --- MAP ---
+
+// Homework!
 export const getMap: () => Promise<File | Error> = async () => {
   const regions = await getRegions();
 
-  const entries: {
-    lat: number,
-    long: number,
-    cases: number,
-  }[] = [];
-
   if (!isError(regions)) {
-    let maxCases = 0;
-    for (let i = 0; i < regions.length; i++) {
-      const entry = {
-        lat: regions[i].lat,
-        long: regions[i].long,
-        cases: 0,
-      }
+    const entries: {
+      lat: number;
+      long: number;
+      cases: number;
+    }[] = [];
 
+    let maxCases = 0;
+
+    // For each region we get the cases for a specific day
+    for (let i = 0; i < regions.length; i++) {
       const cases = await getCasesByRegionId(regions[i].id, 2020, 11, 6);
-      if (isEntry(cases)) {
-        entry.cases = cases.total_positive;
-        if(maxCases < cases.total_positive) {
+      if (!isError(cases)) {
+        if (maxCases < cases.total_positive) {
           maxCases = cases.total_positive;
         }
 
-        entries.push(entry);
+        entries.push({
+          lat: regions[i].lat,
+          long: regions[i].long,
+          cases: cases.total_positive,
+        });
       }
     }
 
-    console.log({
-      key: secrets.MAPQUEST_KEY,
-      size: '300,370',
-      center: '42,12.5',
-      zoom: 5,
-      shape: entries.map(entry => `border:ff0000ff|fill:ff000099|radius:${100 * entry.cases / maxCases}|${entry.lat},${entry.long}`)
-    })
+    // Create the parameters for the query
+    // (with normalization of the radius depending on the
+    // maximum number of cases found in the set)
+    const shapes = [];
+    for (let i = 0; i < entries.length; i++) {
+      const radius = 50 * (entries[i].cases / maxCases);
+      shapes.push(
+        `border:ff0000ff|fill:ff000099|radius:${radius}|${entries[i].lat},${entries[i].long}`
+      );
+    }
 
+    // Let's make the request to google chart API to create the map
     try {
       const response = await axios.get<File>('https://www.mapquestapi.com/staticmap/v5/map', {
-        responseType: 'arraybuffer',
+        responseType: 'arraybuffer', // Needed because the response is not a json but a binary file!
         params: {
           key: secrets.MAPQUEST_KEY,
           size: '300,370',
           center: '42,12.5',
           zoom: 5,
           type: 'light',
-          shape: entries.map(entry => `border:ff0000ff|fill:ff000099|radius:${50 * entry.cases / maxCases}|${entry.lat},${entry.long}`)
+          shape: shapes,
         },
       });
       return response.data;
@@ -231,7 +322,8 @@ export const getMap: () => Promise<File | Error> = async () => {
       };
     }
   } else {
-    return regions;
+    return regions; // It's an error! :( We return it as is.
   }
 };
+
 //endregion

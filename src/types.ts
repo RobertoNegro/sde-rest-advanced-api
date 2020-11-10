@@ -40,16 +40,3 @@ export interface Entry {
   cases_tested: number;
 }
 
-export const isEntry = (arg: any): arg is Entry => {
-  return arg && arg.tampons;
-};
-
-export interface Cases {
-  [id: number]: {
-    [year: number]: {
-      [month: number]: {
-        [day: number]: Entry;
-      };
-    };
-  };
-}

@@ -2,9 +2,9 @@
   "name": "sde-rest-advanced-api",
   "version": "1.0.0",
   "description": "REST Advanced Lab | Service Design Engineering | UniTN | 2020-21 | Roberto Negro, Giulia Peserico, Edoardo Schioccola, Dinah Wobuyaga",
-  "main": "index.js",
+  "main": "build/index.js",
   "scripts": {
-    "start": "tsc-watch --onSuccess \"node index.js\""
+    "start": "tsc-watch --onSuccess \"node build/index.js\""
   },
   "author": "Roberto Negro, Giulia Peserico, Edoardo Schioccola, Dinah Wobuyaga",
   "license": "MIT",

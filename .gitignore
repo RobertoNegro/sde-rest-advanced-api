@@ -6,7 +6,6 @@ secrets.ts
 .history
 
 node_modules
-build
 
 *.js
 *.map

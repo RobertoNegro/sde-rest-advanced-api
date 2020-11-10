@@ -6,19 +6,19 @@
  *   In this way, here you can have a more organized way to check all
  *   your routes!
  *   In a huge project, you can define multiple routers in order to divide
- *   the endpoints by the domain of their operation.
+ *   the endpoints in different files by the domain of their operation.
  */
 
 import express from 'express';
 import {
+  hello,
   casesByRegionId,
-  generateDatabase,
-  index,
-  lineChart, map,
+  lineChart,
+  map,
   pieChart,
   ranking,
   regionById,
-  regions
+  regions,
 } from './controller';
 
 const router = express.Router();
@@ -28,17 +28,15 @@ const router = express.Router();
 // To add URL parameters (Doable for any method! Not only for GET):
 // router.get('/:parameter1/:parameter2', f);
 
-router.get('/', index);
+router.get('/', hello);
+
 router.get('/regions', regions);
 router.get('/region/:id', regionById);
-router.get('/region/:id/cases/:year?/:month?/:day?', casesByRegionId);
+router.get('/region/:id/cases/:year/:month/:day', casesByRegionId);
 
 router.get('/ranking', ranking);
 router.get('/charts/pie', pieChart);
 router.get('/charts/line', lineChart);
 router.get('/map', map);
-
-router.get('/generate', generateDatabase);
-
 
 export default router;

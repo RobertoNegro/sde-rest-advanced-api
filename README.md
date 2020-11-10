@@ -18,4 +18,5 @@ Run the service executing the command:
 ```bash
 npm run start
 ```
+
 The server will automatically restart when the files are changed.
