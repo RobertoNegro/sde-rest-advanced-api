@@ -28,7 +28,7 @@ const router = express.Router();
 // To add URL parameters (Doable for any method! Not only for GET):
 // router.get('/:parameter1/:parameter2', f);
 
-router.get('/', hello);
+router.get('/', hello); // Example
 
 router.get('/regions', regions);
 router.get('/region/:id', regionById);

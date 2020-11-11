@@ -14,6 +14,7 @@ import { Request, Response } from 'express';
 import { isError } from './types';
 import {
   getCasesByRegionId,
+  getHello,
   getLineChart,
   getMap,
   getPieChart,
@@ -22,7 +23,8 @@ import {
   getRegions,
 } from './core';
 
-// Example!
+//region --- EXAMPLE ---
+
 export const hello = (req: Request, res: Response) => {
   // If in the URL (GET request) e.g. localhost:8080/?name=pippo
   const name = req.query['name'];
@@ -33,11 +35,15 @@ export const hello = (req: Request, res: Response) => {
   // If in the URL as a parameter e.g. localhost:8080/pippo/ and route defined as '/:name'
   // const name = req.params['name'];
 
-  const responseObj = {
-    text: `Hello ${name}`,
-  };
-  res.send(responseObj);
+  if(name != null && typeof name === 'string') {
+    res.send(getHello(name));
+  } else {
+    res.status(400);
+    res.send({ error: 'Invalid name format!' });
+  }
 };
+
+//endregion
 
 //region --- REGIONS and CASES ---
 

@@ -21,6 +21,16 @@ axios.defaults.paramsSerializer = (params) => {
   return qs.stringify(params, { indices: false });
 };
 
+//region --- EXAMPLE ---
+
+export const getHello: (name: string) => {text: string} = (name) => {
+  return {
+    text: `Hello ${name}`,
+  };
+}
+
+//endregion
+
 //region --- REGIONS and CASES ---
 
 // Example
