@@ -18,7 +18,7 @@ import {
   ranking,
   regionById,
   regions,
-  barChart
+  barChart,
 } from './controller';
 
 const router = express.Router();

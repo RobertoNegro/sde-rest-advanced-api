@@ -22,7 +22,12 @@ import {
   getRegionById,
   getRegions,
 } from './core';
-import {getCurrentDate, getDateFromRequest, getIdFromRequest, getNumberFromRequest} from "./helper";
+import {
+  getCurrentDate,
+  getDateFromRequest,
+  getIdFromRequest,
+  getNumberFromRequest,
+} from './helper';
 
 //#region --- EXAMPLE ---
 
@@ -36,7 +41,7 @@ export const hello = (req: Request, res: Response) => {
   // If in the URL as a parameter e.g. localhost:8080/pippo/ and route defined as '/:name'
   // const name = req.params['name'];
 
-  if(name != null && typeof name === 'string') {
+  if (name != null && typeof name === 'string') {
     res.send(getHello(name));
   } else {
     res.status(400);
