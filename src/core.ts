@@ -10,7 +10,6 @@
  *   It really depends on your project, style and personal preference :)
  */
 
-
 import { CasesPerRegion, Entry, Error, isError, Region } from './types';
 import config from '../config';
 import qs from 'qs';
@@ -21,17 +20,17 @@ axios.defaults.paramsSerializer = (params) => {
   return qs.stringify(params, { indices: false });
 };
 
-//region --- EXAMPLE ---
+//#region --- EXAMPLE ---
 
-export const getHello: (name: string) => {text: string} = (name) => {
+export const getHello: (name: string) => { text: string } = (name) => {
   return {
     text: `Hello ${name}`,
   };
-}
+};
 
-//endregion
+//#endregion
 
-//region --- REGIONS and CASES ---
+//#region --- REGIONS and CASES ---
 
 // Example
 export const getRegions: () => Promise<Region[] | Error> = async () => {
@@ -79,9 +78,9 @@ export const getCasesByRegionId: (
   }
 };
 
-//endregion
+//#endregion
 
-//region --- LOCAL ELABORATIONS ---
+//#region --- LOCAL ELABORATIONS ---
 
 // Example, first variant, without any parameter
 export const getRanking_1: () => Promise<CasesPerRegion[]> = async () => {
@@ -128,14 +127,17 @@ export const getRanking_2: (n: number) => Promise<CasesPerRegion[]> = async (n) 
 // Exercise: ordering
 export const getRanking: (
   n: number,
-  ordering: 'asc' | 'desc'
-) => Promise<CasesPerRegion[]> = async (n, ordering) => {
+  ordering: 'asc' | 'desc',
+  year: number,
+  month: number,
+  day: number
+) => Promise<CasesPerRegion[]> = async (n, ordering, year, month, day) => {
   const regions = await getRegions();
 
   let ranks: CasesPerRegion[] = [];
   if (!isError(regions)) {
     for (let i = 0; i < regions.length; i++) {
-      const cases = await getCasesByRegionId(regions[i].id, 2020, 11, 6);
+      const cases = await getCasesByRegionId(regions[i].id, year, month, day);
       if (!isError(cases)) {
         ranks.push({
           region: regions[i],
@@ -151,55 +153,55 @@ export const getRanking: (
   else return ranks.reverse().slice(0, n);
 };
 
-//endregion
+//#endregion
 
-//region --- CHARTS ---
+//#region --- CHARTS ---
 
 // Example
-export const getPieChart: () => Promise<File | Error> = async () => {
+export const getBarChart: (
+  year: number,
+  month: number,
+  day: number
+) => Promise<File | Error> = async (year, month, day) => {
   const regions = await getRegions();
 
   if (!isError(regions)) {
-    const casesPerRegions: CasesPerRegion[] = [];
-
-    let totalCases = 0;
-
-    // For each region, take the total number of positives
-    for (let i = 0; i < regions.length; i++) {
-      const cases = await getCasesByRegionId(regions[i].id, 2020, 11, 6);
-      if (!isError(cases)) {
-        casesPerRegions.push({
-          region: regions[i],
-          cases: cases.total_positive,
-        });
-        totalCases += cases.total_positive;
-      }
-    }
-
-    // Create the parameters for the query (with normalization of the cases such that the total sum is 100)
     let labels = '';
     let data = '';
-    for (let i = 0; i < casesPerRegions.length; i++) {
-      labels += casesPerRegions[i].region.name;
-      data += Math.trunc((casesPerRegions[i].cases / totalCases) * 100);
 
-      if(i < casesPerRegions.length - 1) {
-        labels += '|';
-        data += ',';
+    // For each region, take the total number of positives amnd create the parameters query
+    for (let i = 0; i < regions.length; i++) {
+      const cases = await getCasesByRegionId(regions[i].id, year, month, day);
+      if (!isError(cases)) {
+        labels += regions[i].name.replace('P.A. ', '').slice(0, 4) + '.|';
+        data += cases.total_positive + ',';
       }
     }
+
+    // remove trailing comma and pipe
+    if (labels.length > 0) {
+      labels = labels.slice(0, -1);
+    }
+    if (data.length > 0) {
+      data = data.slice(0, -1);
+    }
+
+    console.log(labels);
 
     // Let's make the request to google chart API to create the chart
     try {
       const response = await axios.get<File>('https://chart.googleapis.com/chart', {
         responseType: 'arraybuffer', // Needed because the response is not a json but a binary file!
         params: {
-          cht: 'p3',
-          chs: `600x250`,
+          cht: 'bvg',
+          chs: `1000x250`,
           chtt: 'Covid Infections',
-          chl: `${labels}`,
+          chds: '0,10000',
           chd: `t:${data}`,
-          chco: 'ef476f,ffd166,06d6a0,118ab2,073b4c',
+          chco: '118ab2',
+          chl: `${labels}`,
+          chxt: 'x,y',
+          chxr: '1,0,10000',
         },
       });
 
@@ -216,25 +218,32 @@ export const getPieChart: () => Promise<File | Error> = async () => {
 };
 
 // Exercise
-export const getLineChart: () => Promise<File | Error> = async () => {
-  const region = await getRegionById(22);
+export const getLineChart: (
+  id: number,
+  year: number,
+  month: number
+) => Promise<File | Error> = async (id, year, month) => {
+  const region = await getRegionById(id);
 
   if (!isError(region)) {
     let labels = '';
     let data = '';
 
     // For each day, take the total number of positives and create the parameters for the query
-    for (let i = 0; i < 30; i++) {
-      const cases = await getCasesByRegionId(region.id, 2020, 11, i);
+    for (let i = 0; i <= 31; i++) {
+      const cases = await getCasesByRegionId(region.id, year, month, i);
       if (!isError(cases)) {
-        labels += i;
-        data += cases.total_positive;
-
-        if(i < 30 - 1) {
-          labels += '|';
-          data += ',';
-        }
+        labels += i + '|';
+        data += cases.total_positive + ',';
       }
+    }
+
+    // remove trailing comma and pipe
+    if (labels.length > 0) {
+      labels = labels.slice(0, -1);
+    }
+    if (data.length > 0) {
+      data = data.slice(0, -1);
     }
 
     // Let's make the request to google chart API to create the chart
@@ -267,12 +276,16 @@ export const getLineChart: () => Promise<File | Error> = async () => {
   }
 };
 
-//endregion
+//#endregion
 
-//region --- MAP ---
+//#region --- MAP ---
 
 // Homework!
-export const getMap: () => Promise<File | Error> = async () => {
+export const getMap: (year: number, month: number, day: number) => Promise<File | Error> = async (
+  year,
+  month,
+  day
+) => {
   const regions = await getRegions();
 
   if (!isError(regions)) {
@@ -286,7 +299,7 @@ export const getMap: () => Promise<File | Error> = async () => {
 
     // For each region we get the cases for a specific day
     for (let i = 0; i < regions.length; i++) {
-      const cases = await getCasesByRegionId(regions[i].id, 2020, 11, 6);
+      const cases = await getCasesByRegionId(regions[i].id, year, month, day);
       if (!isError(cases)) {
         if (maxCases < cases.total_positive) {
           maxCases = cases.total_positive;
@@ -336,4 +349,4 @@ export const getMap: () => Promise<File | Error> = async () => {
   }
 };
 
-//endregion
+//#endregion

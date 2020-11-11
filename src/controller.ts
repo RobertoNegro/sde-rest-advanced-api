@@ -17,13 +17,14 @@ import {
   getHello,
   getLineChart,
   getMap,
-  getPieChart,
+  getBarChart,
   getRanking,
   getRegionById,
   getRegions,
 } from './core';
+import {getCurrentDate, getDateFromRequest, getIdFromRequest, getNumberFromRequest} from "./helper";
 
-//region --- EXAMPLE ---
+//#region --- EXAMPLE ---
 
 export const hello = (req: Request, res: Response) => {
   // If in the URL (GET request) e.g. localhost:8080/?name=pippo
@@ -43,78 +44,65 @@ export const hello = (req: Request, res: Response) => {
   }
 };
 
-//endregion
+//#endregion
 
-//region --- REGIONS and CASES ---
+//#region --- REGIONS and CASES ---
 
 export const regions = async (req: Request, res: Response) => {
   res.send(await getRegions());
 };
 
 export const regionById = async (req: Request, res: Response) => {
-  try {
-    const id = parseInt(req.params['id']);
+  const id = getIdFromRequest(req);
+  if (id !== false) {
     res.send(await getRegionById(id));
-  } catch (err) {
+  } else {
     res.status(400);
     res.send({ error: 'Invalid ID format!' });
   }
 };
 
 export const casesByRegionId = async (req: Request, res: Response) => {
-  let id = null;
-  try {
-    id = parseInt(req.params['id']);
-  } catch (err) {
+  const id = getIdFromRequest(req);
+  if (id === false) {
     res.status(400);
     res.send({ error: 'Invalid ID format!' });
     return;
   }
 
-  let year;
-  let month;
-  let day;
-  try {
-    year = parseInt(req.params['year']);
-  } catch (e) {
-    res.status(400);
-    res.send({ error: 'Invalid year format!' });
-    return;
-  }
-  try {
-    month = parseInt(req.params['month']);
-  } catch (e) {
-    res.status(400);
-    res.send({ error: 'Invalid month format!' });
-    return;
-  }
-  try {
-    day = parseInt(req.params['day']);
-  } catch (e) {
-    res.status(400);
-    res.send({ error: 'Invalid day format!' });
-    return;
-  }
-  res.send(await getCasesByRegionId(id, year, month, day));
+  const date = getDateFromRequest(req);
+
+  res.send(await getCasesByRegionId(id, date.year, date.month, date.day));
 };
 
-//endregion
+//#endregion
 
-//region --- LOCAL ELABORATIONS ---
+//#region --- LOCAL ELABORATIONS ---
 
 export const ranking = async (req: Request, res: Response) => {
-  const n = typeof req.query['n'] === 'string' ? parseInt(req.query['n']) : 5;
-  const ord = req.query['ord'] === 'desc' || req.query['ord'] === 'asc' ? req.query['ord'] : 'desc';
+  const date = getDateFromRequest(req);
 
-  res.send(await getRanking(n, ord));
+  let n = getNumberFromRequest(req, 'n');
+  if (n === false) {
+    n = 5;
+  }
+
+  let ord: 'asc' | 'desc' = 'desc';
+  if (req.query['ord'] === 'asc') {
+    ord = 'asc';
+  }
+
+  res.send(await getRanking(n, ord, date.year, date.month, date.day));
 };
 
-//endregion
+//#endregion
 
-//region --- CHARTS ---
+//#region --- CHARTS ---
 
-export const pieChart = async (req: Request, res: Response) => {
-  const chart = await getPieChart();
+export const barChart = async (req: Request, res: Response) => {
+  const date = getDateFromRequest(req);
+
+  const chart = await getBarChart(date.year, date.month, date.day);
   if (!isError(chart)) {
     res.contentType('image/png');
   }
@@ -122,23 +110,33 @@ export const pieChart = async (req: Request, res: Response) => {
 };
 
 export const lineChart = async (req: Request, res: Response) => {
-  const chart = await getLineChart();
+  const id = getIdFromRequest(req);
+  if (id === false) {
+    res.status(400);
+    res.send({ error: 'Invalid ID format!' });
+    return;
+  }
+
+  let date = getDateFromRequest(req);
+
+  const chart = await getLineChart(id, date.year, date.month);
   if (!isError(chart)) {
     res.contentType('image/png');
   }
   res.send(chart);
 };
 
-//endregion
+//#endregion
 
-//region --- MAP ---
-
+//#region --- MAP ---
 export const map = async (req: Request, res: Response) => {
-  const map = await getMap();
+  let date = getDateFromRequest(req);
+
+  const map = await getMap(date.year, date.month, date.day);
   if (!isError(map)) {
     res.contentType('image/png');
   }
   res.send(map);
 };
 
-//endregion
+//#endregion

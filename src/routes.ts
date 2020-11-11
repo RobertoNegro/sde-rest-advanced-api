@@ -15,10 +15,10 @@ import {
   casesByRegionId,
   lineChart,
   map,
-  pieChart,
   ranking,
   regionById,
   regions,
+  barChart
 } from './controller';
 
 const router = express.Router();
@@ -31,12 +31,14 @@ const router = express.Router();
 router.get('/', hello); // Example
 
 router.get('/regions', regions);
-router.get('/region/:id', regionById);
-router.get('/region/:id/cases/:year/:month/:day', casesByRegionId);
+router.get('/region', regionById);
+router.get('/cases', casesByRegionId);
 
 router.get('/ranking', ranking);
-router.get('/charts/pie', pieChart);
+
+router.get('/charts/bar', barChart);
 router.get('/charts/line', lineChart);
+
 router.get('/map', map);
 
 export default router;
