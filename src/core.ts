@@ -136,7 +136,7 @@ export const getBarChart: (
         responseType: 'arraybuffer', // Needed because the response is not a json but a binary file!
         params: {
           cht: 'bvg',
-          chs: `1000x250`,
+          chs: `700x250`,
           chtt: 'Covid Infections',
           chds: '0,10000',
           chd: `t:${data}`,
