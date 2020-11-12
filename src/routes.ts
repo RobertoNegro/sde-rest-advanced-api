@@ -12,9 +12,6 @@
 import express from 'express';
 import {
   hello,
-  casesByRegionId,
-  lineChart,
-  map,
   ranking,
   regionById,
   regions,
@@ -32,13 +29,9 @@ router.get('/', hello); // Example
 
 router.get('/regions', regions);
 router.get('/region', regionById);
-router.get('/cases', casesByRegionId);
 
 router.get('/ranking', ranking);
 
 router.get('/charts/bar', barChart);
-router.get('/charts/line', lineChart);
-
-router.get('/map', map);
 
 export default router;

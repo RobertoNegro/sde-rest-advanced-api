@@ -13,17 +13,13 @@ import { Request, Response } from 'express';
 
 import { isError } from './types';
 import {
-  getCasesByRegionId,
   getHello,
-  getLineChart,
-  getMap,
   getBarChart,
   getRanking,
   getRegionById,
   getRegions,
 } from './core';
 import {
-  getCurrentDate,
   getDateFromRequest,
   getIdFromRequest,
   getNumberFromRequest,
@@ -67,19 +63,6 @@ export const regionById = async (req: Request, res: Response) => {
   }
 };
 
-export const casesByRegionId = async (req: Request, res: Response) => {
-  const id = getIdFromRequest(req);
-  if (id === false) {
-    res.status(400);
-    res.send({ error: 'Invalid ID format!' });
-    return;
-  }
-
-  const date = getDateFromRequest(req);
-
-  res.send(await getCasesByRegionId(id, date.year, date.month, date.day));
-};
-
 //#endregion
 
 //#region --- LOCAL ELABORATIONS ---
@@ -92,12 +75,7 @@ export const ranking = async (req: Request, res: Response) => {
     n = 5;
   }
 
-  let ord: 'asc' | 'desc' = 'desc';
-  if (req.query['ord'] === 'asc') {
-    ord = 'asc';
-  }
-
-  res.send(await getRanking(n, ord, date.year, date.month, date.day));
+  res.send(await getRanking(n, date.year, date.month, date.day));
 };
 
 //#endregion
@@ -112,36 +90,6 @@ export const barChart = async (req: Request, res: Response) => {
     res.contentType('image/png');
   }
   res.send(chart);
-};
-
-export const lineChart = async (req: Request, res: Response) => {
-  const id = getIdFromRequest(req);
-  if (id === false) {
-    res.status(400);
-    res.send({ error: 'Invalid ID format!' });
-    return;
-  }
-
-  let date = getDateFromRequest(req);
-
-  const chart = await getLineChart(id, date.year, date.month);
-  if (!isError(chart)) {
-    res.contentType('image/png');
-  }
-  res.send(chart);
-};
-
-//#endregion
-
-//#region --- MAP ---
-export const map = async (req: Request, res: Response) => {
-  let date = getDateFromRequest(req);
-
-  const map = await getMap(date.year, date.month, date.day);
-  if (!isError(map)) {
-    res.contentType('image/png');
-  }
-  res.send(map);
 };
 
 //#endregion
