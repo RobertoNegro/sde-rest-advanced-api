@@ -23,7 +23,6 @@ import {
   getRegions,
 } from './core';
 import {
-  getCurrentDate,
   getDateFromRequest,
   getIdFromRequest,
   getNumberFromRequest,

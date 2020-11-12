@@ -82,49 +82,7 @@ export const getCasesByRegionId: (
 
 //#region --- LOCAL ELABORATIONS ---
 
-// Example, first variant, without any parameter
-export const getRanking_1: () => Promise<CasesPerRegion[]> = async () => {
-  const regions = await getRegions();
-
-  let ranks: CasesPerRegion[] = [];
-  if (!isError(regions)) {
-    for (let i = 0; i < regions.length; i++) {
-      const cases = await getCasesByRegionId(regions[i].id, 2020, 11, 6);
-      if (!isError(cases)) {
-        ranks.push({
-          region: regions[i],
-          cases: cases.total_positive,
-        });
-      }
-    }
-  }
-
-  ranks = ranks.sort((a: CasesPerRegion, b: CasesPerRegion) => a.cases - b.cases);
-  return ranks.slice(0, 5);
-};
-
-// Example, second variant, with n as parameter
-export const getRanking_2: (n: number) => Promise<CasesPerRegion[]> = async (n) => {
-  const regions = await getRegions();
-
-  let ranks: CasesPerRegion[] = [];
-  if (!isError(regions)) {
-    for (let i = 0; i < regions.length; i++) {
-      const cases = await getCasesByRegionId(regions[i].id, 2020, 11, 6);
-      if (!isError(cases)) {
-        ranks.push({
-          region: regions[i],
-          cases: cases.total_positive,
-        });
-      }
-    }
-  }
-
-  ranks = ranks.sort((a: CasesPerRegion, b: CasesPerRegion) => a.cases - b.cases);
-  return ranks.slice(0, n);
-};
-
-// Exercise: ordering
+// Example: with n. Exercise: with ordering parameter
 export const getRanking: (
   n: number,
   ordering: 'asc' | 'desc',
@@ -147,10 +105,10 @@ export const getRanking: (
     }
   }
 
-  ranks = ranks.sort((a: CasesPerRegion, b: CasesPerRegion) => a.cases - b.cases);
+  ranks = ranks.sort((a: CasesPerRegion, b: CasesPerRegion) => b.cases - a.cases);
 
-  if (ordering === 'asc') return ranks.slice(0, n);
-  else return ranks.reverse().slice(0, n);
+  if (ordering === 'asc') return ranks.reverse().slice(0, n);
+  else return ranks.slice(0, n);
 };
 
 //#endregion
