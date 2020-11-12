@@ -128,8 +128,6 @@ export const getBarChart: (
       data = data.slice(0, -1);
     }
 
-    console.log(labels);
-
     // Let's make the request to google chart API to create the chart
     try {
       const response = await axios.get<File>('https://chart.googleapis.com/chart', {
