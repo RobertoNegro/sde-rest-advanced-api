@@ -1,3 +1,3 @@
 export default {
-  MAPQUEST_KEY: '',
+  MAPQUEST_KEY: 'your-api-key',
 }
