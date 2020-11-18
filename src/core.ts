@@ -126,6 +126,7 @@ export const getBarChart: (
   if (!isError(regions)) {
     let labels = '';
     let data = '';
+    let maxCases = 10000;
 
     // For each region, take the total number of positives amnd create the parameters query
     for (let i = 0; i < regions.length; i++) {
@@ -133,6 +134,9 @@ export const getBarChart: (
       if (!isError(cases)) {
         labels += regions[i].name.replace('P.A. ', '').slice(0, 4) + '.|';
         data += cases.total_positive + ',';
+        if (cases.total_positive > maxCases) {
+          maxCases = cases.total_positive;
+        }
       }
     }
 
@@ -152,12 +156,12 @@ export const getBarChart: (
           cht: 'bvg',
           chs: `700x250`,
           chtt: 'Covid Infections',
-          chds: '0,10000',
+          chds: `0,${maxCases}`,
           chd: `t:${data}`,
           chco: '118ab2',
           chl: `${labels}`,
           chxt: 'x,y',
-          chxr: '1,0,10000',
+          chxr: `1,0,${maxCases}`,
         },
       });
 
@@ -184,6 +188,7 @@ export const getLineChart: (
   if (!isError(region)) {
     let labels = '';
     let data = '';
+    let maxCases = 10000;
 
     // For each day, take the total number of positives and create the parameters for the query
     for (let i = 0; i <= 31; i++) {
@@ -191,6 +196,9 @@ export const getLineChart: (
       if (!isError(cases)) {
         labels += i + '|';
         data += cases.total_positive + ',';
+        if (cases.total_positive > maxCases) {
+          maxCases = cases.total_positive;
+        }
       }
     }
 
@@ -210,13 +218,13 @@ export const getLineChart: (
           cht: 'lc',
           chs: `600x250`,
           chtt: 'Covid Infections',
-          chds: '0,10000',
+          chds: `0,${maxCases}`,
           chd: `t:${data}`,
           chdl: `${region.name}`,
           chco: '118ab2',
           chl: `${labels}`,
           chxt: 'x,y',
-          chxr: '1,0,10000',
+          chxr: `1,0,${maxCases}`,
         },
       });
 
