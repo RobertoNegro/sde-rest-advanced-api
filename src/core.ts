@@ -72,11 +72,10 @@ export const getCasesByRegionId: (
 //#region --- LOCAL ELABORATIONS ---
 
 export const getRanking: (
-  n: number,
   year: number,
   month: number,
   day: number
-) => Promise<CasesPerRegion[]> = async (n, year, month, day) => {
+) => Promise<CasesPerRegion[]> = async (year, month, day) => {
   const regions = await getRegions();
 
   let ranks: CasesPerRegion[] = [];
@@ -93,7 +92,7 @@ export const getRanking: (
   }
 
   ranks = ranks.sort((a: CasesPerRegion, b: CasesPerRegion) => b.cases - a.cases);
-  return ranks.slice(0, n);
+  return ranks.slice(0, 5);
 };
 
 //#endregion

@@ -69,13 +69,7 @@ export const regionById = async (req: Request, res: Response) => {
 
 export const ranking = async (req: Request, res: Response) => {
   const date = getDateFromRequest(req);
-
-  let n = getNumberFromRequest(req, 'n');
-  if (n === false) {
-    n = 5;
-  }
-
-  res.send(await getRanking(n, date.year, date.month, date.day));
+  res.send(await getRanking(date.year, date.month, date.day));
 };
 
 //#endregion
