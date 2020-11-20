@@ -17,7 +17,7 @@ import {
   getBarChart,
   getRanking,
   getRegionById,
-  getRegions,
+  getRegions, getCasesByRegionId, getLineChart
 } from './core';
 import {
   getDateFromRequest,
@@ -63,13 +63,32 @@ export const regionById = async (req: Request, res: Response) => {
   }
 };
 
+export const casesByRegionId = async (req: Request, res: Response) => {
+  const id = getIdFromRequest(req);
+  if (id !== false) {
+    const date = getDateFromRequest(req);
+    res.send(await getCasesByRegionId(id, date.year, date.month, date.day));
+  } else {
+    res.status(400);
+    res.send({ error: 'Invalid ID format!' });
+  }
+};
+
 //#endregion
 
 //#region --- LOCAL ELABORATIONS ---
 
 export const ranking = async (req: Request, res: Response) => {
   const date = getDateFromRequest(req);
-  res.send(await getRanking(date.year, date.month, date.day));
+  let n = getNumberFromRequest(req, 'n');
+  if (n === false) {
+    n = 5;
+  }
+  let ord = req.query['ord'];
+  if (ord !== 'asc') {
+    ord = 'desc';
+  }
+  res.send(await getRanking(n, ord, date.year, date.month, date.day));
 };
 
 //#endregion
@@ -84,6 +103,22 @@ export const barChart = async (req: Request, res: Response) => {
     res.contentType('image/png');
   }
   res.send(chart);
+};
+
+export const lineChart = async (req: Request, res: Response) => {
+  const id = getIdFromRequest(req);
+  if (id !== false) {
+    const date = getDateFromRequest(req);
+
+    const chart = await getLineChart(id, date.year, date.month);
+    if (!isError(chart)) {
+      res.contentType('image/png');
+    }
+    res.send(chart);
+  } else {
+    res.status(400);
+    res.send({ error: 'Invalid ID format!' });
+  }
 };
 
 //#endregion

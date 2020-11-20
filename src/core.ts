@@ -62,9 +62,15 @@ export const getCasesByRegionId: (
   month: number,
   day: number
 ) => Promise<Entry | Error> = async (id, year, month, day) => {
-  return {
-    error: 'It\'s an exercise! And it\'s not done yet! :(',
-  };
+  try {
+    const cases = await axios.get<Entry>(`${config.URL_API_DATA}/region/${id}/cases/${year}/${month}/${day}`);
+    return cases.data;
+  } catch (e) {
+    console.error(e);
+    return {
+      error: e,
+    };
+  }
 };
 
 //#endregion
@@ -72,10 +78,12 @@ export const getCasesByRegionId: (
 //#region --- LOCAL ELABORATIONS ---
 
 export const getRanking: (
+  n: number,
+  ord: string,
   year: number,
   month: number,
   day: number
-) => Promise<CasesPerRegion[]> = async (year, month, day) => {
+) => Promise<CasesPerRegion[]> = async (n, ord, year, month, day) => {
   const regions = await getRegions();
 
   let ranks: CasesPerRegion[] = [];
@@ -92,7 +100,10 @@ export const getRanking: (
   }
 
   ranks = ranks.sort((a: CasesPerRegion, b: CasesPerRegion) => b.cases - a.cases);
-  return ranks.slice(0, 5);
+  if (ord === 'asc') {
+    ranks = ranks.reverse();
+  }
+  return ranks.slice(0, n);
 };
 
 //#endregion
@@ -157,6 +168,71 @@ export const getBarChart: (
     }
   } else {
     return regions; // It's an error! :( We return it as is.
+  }
+};
+
+export const getLineChart: (
+  id: number,
+  year: number,
+  month: number,
+) => Promise<File | Error> = async (id, year, month) => {
+  const region = await getRegionById(id);
+
+  if (!isError(region)) {
+    let labels = '';
+    let data = '';
+    let maxCases = 10000;
+
+    // Get cases for each day of the month
+    for (let i = 1; i <= 31; i++) {
+      const cases = await getCasesByRegionId(region.id, year, month, i);
+      // If the day does not exists, it will be an error,
+      // so even if we're trying to get 31th of February,
+      // it will not be added to the labels and data!
+      if (!isError(cases)) {
+        labels += i + '|';
+        data += cases.total_positive + ',';
+        if (cases.total_positive > maxCases) {
+          maxCases = cases.total_positive;
+        }
+      }
+    }
+
+    // remove trailing comma and pipe
+    if (labels.length > 0) {
+      labels = labels.slice(0, -1);
+    }
+    if (data.length > 0) {
+      data = data.slice(0, -1);
+    }
+
+    // Let's make the request to google chart API to create the chart
+    try {
+      const response = await axios.get<File>('https://chart.googleapis.com/chart', {
+        responseType: 'arraybuffer', // Needed because the response is not a json but a binary file!
+        params: {
+          cht: 'lc',
+          chs: `600x250`,
+          chtt: 'Covid Infections',
+          chds: `0,${maxCases}`,
+          chd: `t:${data}`,
+          chdl: region.name,
+          chco: '118ab2',
+          chl: `${labels}`,
+          chxt: 'x,y',
+          chxr: `1,0,${maxCases}`,
+        },
+      });
+
+      return response.data;
+    } catch (e) {
+      console.error(e);
+      return {
+        error: e,
+      };
+    }
+  } else {
+    return region; // It's an error! :( We return it as is.
   }
 };
 
